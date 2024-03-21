@@ -1,12 +1,12 @@
 import pymongo
-
+from datetime import datetime as dt
 
 class ExpenseMongoClient:
     def __init__(
             self,
             host: str,
             port: int,
-            db_name: str = "telegram_bot",
+            db_name: str = "Expenses_Bot",
             collection_name: str = "expenses",
     ):
         self.client = pymongo.MongoClient(host, port)
@@ -19,6 +19,7 @@ class ExpenseMongoClient:
             "amount": amount,
             "category": category,
             "description": description,
+            'date': dt.today().date().strftime("%Y-%m-%d")
             })
         return results
 
@@ -76,25 +77,5 @@ class ExpenseMongoClient:
 
 
 if __name__ == "__main__":
-    connection_uri = "mongodb+srv://jigsaw1313:Aramis2427@expenses.0cbt6ew.mongodb.net/"
+    connection_uri = "localhost"
     expense_mongo_client = ExpenseMongoClient(connection_uri, 27017)
-    expense_mongo_client.add_expense(123, 100, "غذا", "ناهار")
-    expense_mongo_client.add_expense(123, 200, "غذا", "شام")
-    expense_mongo_client.add_expense(123, 300, "سفر", "پرواز")
-    expense_mongo_client.add_expense(321, 400, "غذا", "ناهار")
-    expense_mongo_client.add_expense(321, 500, "سفر", "پرواز")
-
-    print("Expenses of 123")
-    print(expense_mongo_client.get_expenses(123))
-
-    print("Categories of 123")
-    print(expense_mongo_client.get_categories(123))
-
-    print("Total expense of 321")
-    print(expense_mongo_client.get_total_expense(321))
-
-    print("Total expense by category of 321")
-    print(expense_mongo_client.get_total_expense_by_category(321))
-
-    print("Expenses by category of 123")
-    print(expense_mongo_client.get_expenses_by_category(123, "غذا"))

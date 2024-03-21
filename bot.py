@@ -1,5 +1,6 @@
 from typing import Final
 import logging
+from datetime import datetime as dt
 from telegram import Update
 from telegram.ext import (
     ApplicationBuilder,
@@ -9,7 +10,7 @@ from telegram.ext import (
 
 from mongo_client import ExpenseMongoClient
 
-BOT_TOKEN : Final = "6799669142:AAFrF31AMi53r-ng9-KqaDqSZmpJkIZMghk"
+BOT_TOKEN : Final = "7079993461:AAFCPe9xa-J_WLFlaUpE63_0baNj34MJ1ko"
 
 # Enable Logging
 logging.basicConfig(
@@ -23,11 +24,30 @@ logger = logging.getLogger(__name__)
 # connect to your mongodb
 db_client = ExpenseMongoClient("localhost", 27017)
 
+# Handlers
 async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Hello, I'm a bot! Thanks for using me!",
+        text="Hello Mohammadreza, Let's record your daily expenses",
         reply_to_message_id=update.effective_message.id,
+    )
+
+HELP_COMMAND_RESPONSE = """
+Greetings! Here are the commands you can use with this bot:
+
+/start -> Begin interacting with the bot
+/add <amount> <category> <description> -> Add new expense
+/get_expense -> Shows list of all expenses
+/get_categories -> Shows all categories
+/get_total -> Show total expenses recorded in database
+/get_total_by_category -> Shows total expenses by category
+"""
+
+async def help_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text = HELP_COMMAND_RESPONSE,
+        reply_to_message_id=update.effective_message.id
     )
 
 
@@ -125,7 +145,8 @@ if __name__ == "__main__":
     bot.add_handler(CommandHandler("start", start_command_handler))
 
     # add all your handlers here
-    bot.add_handler(CommandHandler('add_expense', add_expense_command_handler))
+    bot.add_handler(CommandHandler('add', add_expense_command_handler))
+    bot.add_handler(CommandHandler('help', help_command_handler))
     bot.add_handler(CommandHandler('get_expenses', get_expenses_command_handler))
     bot.add_handler(CommandHandler('get_categories', get_categories_command_handler))
     bot.add_handler(CommandHandler('get_total', get_total_expense_command_handler))
