@@ -12,6 +12,8 @@ from mongo_client import ExpenseMongoClient
 
 BOT_TOKEN : Final = "7079993461:AAFCPe9xa-J_WLFlaUpE63_0baNj34MJ1ko"
 
+dev_ids = [44557320]
+
 # Enable Logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
