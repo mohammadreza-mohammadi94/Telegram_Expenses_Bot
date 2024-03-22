@@ -134,10 +134,11 @@ async def get_total_expense_by_category_command_handler(update: Update, context:
         reply_to_message_id=update.effective_message.id,
         text=text)
 
-
 # Error Handler
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("error:",context.error,"on Update",update)
+
+
 
 if __name__ == "__main__":
     # expense_mongo_client = ExpenseMongoClient("mongodb+srv://jigsaw1313:Aramis2427@expenses.0cbt6ew.mongodb.net/", 27017)

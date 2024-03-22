@@ -76,6 +76,6 @@ class ExpenseMongoClient:
         return total_expense_by_category
 
 
-if __name__ == "__main__":
-    connection_uri = "mongodb+srv://jigsaw1313:Aramis2427@expenses.0cbt6ew.mongodb.net/"
-    expense_mongo_client = ExpenseMongoClient(connection_uri, 27017)
+# if __name__ == "__main__":
+#     connection_uri = "mongodb+srv://jigsaw1313:Aramis2427@expenses.0cbt6ew.mongodb.net/"
+#     expense_mongo_client = ExpenseMongoClient(connection_uri, 27017)
