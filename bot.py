@@ -10,7 +10,7 @@ from telegram.ext import (
 
 from mongo_client import ExpenseMongoClient
 
-BOT_TOKEN : Final = "7079993461:AAFCPe9xa-J_WLFlaUpE63_0baNj34MJ1ko"
+BOT_TOKEN : Final = "7079993461:AAGryn5WVrZlREgS8HwRYMpltQEQr7jKXPI"
 
 dev_ids = [44557320]
 
@@ -24,7 +24,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # connect to your mongodb
-db_client = ExpenseMongoClient("localhost", 27017)
+db_client = ExpenseMongoClient("mongodb+srv://jigsaw1313:Aramis2427@expenses.0cbt6ew.mongodb.net/", 27017)
 
 # Handlers
 async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -140,7 +140,7 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("error:",context.error,"on Update",update)
 
 if __name__ == "__main__":
-    expense_mongo_client = ExpenseMongoClient("localhost", 27017)
+    # expense_mongo_client = ExpenseMongoClient("mongodb+srv://jigsaw1313:Aramis2427@expenses.0cbt6ew.mongodb.net/", 27017)
     bot = ApplicationBuilder().token(BOT_TOKEN).build()
 
     # adding handlers
