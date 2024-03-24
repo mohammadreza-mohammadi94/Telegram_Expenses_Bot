@@ -23,6 +23,14 @@ class ExpenseMongoClient:
             })
         return results
 
+    def delete_expense(self, user_id:int, doc_id:str):
+        result = self.collection.delete_one({
+            'user_id' : user_id,
+            '_id': doc_id,
+        })
+        return result.deleted_count
+    
+    
     def get_expenses(self, user_id: int) -> list:
         results = self.collection.find({'user_id': user_id})
         expenses = []
@@ -38,6 +46,7 @@ class ExpenseMongoClient:
     def get_categories(self, user_id: int) -> list:
         categories = self.collection.distinct('category', {'user_id': user_id})
         return categories
+
 
     def get_expenses_by_category(self, user_id: int, category: str) -> list:
         results = self.collection.find({'user_id': user_id, 'category': category})
@@ -75,7 +84,3 @@ class ExpenseMongoClient:
 
         return total_expense_by_category
 
-
-# if __name__ == "__main__":
-#     connection_uri = "mongodb+srv://jigsaw1313:Aramis2427@expenses.0cbt6ew.mongodb.net/"
-#     expense_mongo_client = ExpenseMongoClient(connection_uri, 27017)

@@ -7,7 +7,7 @@ from telegram.ext import (
     ContextTypes,
     CommandHandler,
 )
-
+from bson.objectid import ObjectId
 from mongo_client import ExpenseMongoClient
 
 BOT_TOKEN : Final = "7079993461:AAGryn5WVrZlREgS8HwRYMpltQEQr7jKXPI"
@@ -37,12 +37,13 @@ async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
 HELP_COMMAND_RESPONSE = """
 Greetings! Here are the commands you can use with this bot:
 
-/start -> Begin interacting with the bot
-/add <amount> <category> <description> -> Add new expense
-/get_expense -> Shows list of all expenses
-/get_categories -> Shows all categories
-/get_total -> Show total expenses recorded in database
-/get_total_by_category -> Shows total expenses by category
+/start -> Begin interacting with the bot.
+/add <amount> <category> <description> -> Add new expense.
+/delete <document_id> -> Removes expense by document id.
+/get_expenses -> Shows list of all expenses.
+/get_categories -> Shows all categories.
+/get_total -> Show total expenses recorded in database.
+/get_total_by_category -> Shows total expenses for each category.
 """
 
 async def help_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -67,6 +68,26 @@ async def add_expense_command_handler(update: Update, context: ContextTypes.DEFA
         reply_to_message_id=update.effective_message.id,
         text="Expense added successfully!"
     )
+
+
+async def delete_expense_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    doc_id = context.args[0]
+    user_id = update.effective_user.id
+    
+    delete_result = db_client.delete_expense(user_id=user_id,
+                            doc_id=ObjectId(doc_id))
+    if delete_result:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            reply_to_message_id=update.effective_message.id,
+            text="Deleted successfully!"
+        )
+    else:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            reply_to_message_id=update.effective_message.id,
+            text="Problem Occured, Please check bot's log."
+        )
 
 
 async def get_expenses_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
