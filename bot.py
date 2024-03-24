@@ -25,13 +25,23 @@ db_client = ExpenseMongoClient("mongodb+srv://jigsaw1313:Aramis2427@expenses.0cb
 
 # Handlers
 async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """ This method is reposible for running and greeting commands"""
+    """ This method is reposible for running and greeting commands."""
+    user_id = update.effective_user.id
     
+    # Check if the user is authorized
+    if user_id not in dev_ids:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="You are not authorized to use this bot.",
+            reply_to_message_id=update.effective_message.id,
+        )
+
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="Hello Mohammadreza, Let's record your daily expenses",
         reply_to_message_id=update.effective_message.id,
     )
+
 
 # help message content.
 HELP_COMMAND_RESPONSE = """
@@ -68,14 +78,23 @@ async def add_expense_command_handler(update: Update, context: ContextTypes.DEFA
     category = context.args[1]
     description = " ".join(context.args[2:])
 
-    # Call the add_expense method on the instance
-    db_client.add_expense(user_id=user_id, amount=int(amount), category=category, description=description)
-    
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        reply_to_message_id=update.effective_message.id,
-        text="Expense added successfully!"
-    )
+    if user_id in dev_ids:
+        # Call the add_expense method on the instance
+        db_client.add_expense(user_id=user_id, amount=int(amount), category=category, description=description)
+        
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            reply_to_message_id=update.effective_message.id,
+            text="Expense added successfully!"
+        )
+
+    else:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="You are not authorized to use this command.",
+            reply_to_message_id=update.effective_message.id,
+        )
+
 
 
 async def delete_expense_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -125,7 +144,7 @@ async def get_expenses_command_handler(update: Update, context: ContextTypes.DEF
     it will show all documents, regardless of its category."""
     
     
-    args = context.args            # To get catregory name as args.
+    args = context.args            # To get catregory name 
     user_id = update.effective_user.id
 
     if args:
