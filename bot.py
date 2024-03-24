@@ -100,7 +100,7 @@ async def get_expenses_command_handler(update: Update, context: ContextTypes.DEF
         text ="Your expenses are:\n"
         for expense in expenses:
             text += (
-                f"{expense['amount']} - {expense['category']} - {expense['description']}\n"
+                f"{expense['amount']} - {expense['category']} - {expense['description']} - {expense['date']} - {expense['document_id']}\n"
     )
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -112,7 +112,7 @@ async def get_expenses_command_handler(update: Update, context: ContextTypes.DEF
         text = "Your expenses are:\n"
         for expense in total_expenses:
             text += (
-                f"{expense['amount']} - {expense['category']} - {expense['description']}\n"
+                f"{expense['amount']} - {expense['category']} - {expense['description']} - {expense['date']} - {expense['document_id']}\n"
             )
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -172,6 +172,7 @@ if __name__ == "__main__":
     bot.add_handler(CommandHandler('add', add_expense_command_handler))
     bot.add_handler(CommandHandler('help', help_command_handler))
     bot.add_handler(CommandHandler('get_expenses', get_expenses_command_handler))
+    bot.add_handler(CommandHandler('delete', delete_expense_command_handler))
     bot.add_handler(CommandHandler('get_categories', get_categories_command_handler))
     bot.add_handler(CommandHandler('get_total', get_total_expense_command_handler))
     bot.add_handler(CommandHandler('get_total_by_category', get_total_expense_by_category_command_handler))

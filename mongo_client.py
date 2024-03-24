@@ -36,9 +36,11 @@ class ExpenseMongoClient:
         expenses = []
         for result in results:
             expenses.append({
+                'document_id' : result["_id"],
                 "amount": result["amount"],
                 "category": result["category"],
                 "description": result["description"],
+                "date": result["date"],
             })
         return expenses
 
@@ -53,9 +55,11 @@ class ExpenseMongoClient:
         cate = []
         for result in results:
             cate.append({
+                'document_id' : result["_id"],
                 "amount": result["amount"],
                 "category": result["category"],
                 "description": result["description"],
+                "date": result["date"],
                 })
         return cate
 
