@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Final
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
@@ -54,6 +55,8 @@ Greetings! Here are the commands you can use with this bot:
 /categories -> Shows all categories.
 /total -> Show total expenses recorded in database.
 /total_by_category -> Shows total expenses for each category.
+/search_month <month: int> -> Show total expenses per month.
+/search_date <start_date> <end_date> -> Show all expenses durint specified date.
 """
 
 async def help_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -94,7 +97,6 @@ async def add_expense_command_handler(update: Update, context: ContextTypes.DEFA
             text="You are not authorized to use this command.",
             reply_to_message_id=update.effective_message.id,
         )
-
 
 
 async def delete_expense_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -205,6 +207,32 @@ async def get_total_expense_by_category_command_handler(update: Update, context:
         text=text)
 
 
+async def search_expense_by_month_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """ This method will show all expenses by specified month."""
+    
+    
+    month = context.args[0]
+    expenses_by_month = db_client.get_expenses_by_month(month)
+    text =f"Your expenses in month number {month} are:\n"
+    
+    for expense in expenses_by_month:
+        text += (
+            f"{expense['amount']} - {expense['category']} - {expense['description']} - {expense['date']} - {expense['_id']}\n"
+        )
+    await context.bot.send_message(
+        chat_id=update.effective_user.id,
+        reply_to_message_id=update.effective_message.id,
+        text=text
+    )
+
+
+async def search_period_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """This function is used to search and retrive all expenses during a given period of date."""
+    
+    
+    pass
+
+
 # Error Handler
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("error:",context.error,"on Update",update)
@@ -223,9 +251,11 @@ if __name__ == "__main__":
     bot.add_handler(CommandHandler('categories', get_categories_command_handler))
     bot.add_handler(CommandHandler('total', get_total_expense_command_handler))
     bot.add_handler(CommandHandler('total_by_category', get_total_expense_by_category_command_handler))
+    bot.add_handler(CommandHandler('search_month', search_expense_by_month_command_handler))
+    bot.add_handler(CommandHandler('search_date', search_period_command_handler))
     
     # Error handlers
-    bot.add_error_handler(error_handler)
+    # bot.add_error_handler(error_handler)
     
     # start bot
     bot.run_polling()

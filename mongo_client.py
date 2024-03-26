@@ -88,3 +88,50 @@ class ExpenseMongoClient:
 
         return total_expense_by_category
 
+
+    def get_expenses_by_month(self, month: int):
+        # Convert the month to a string with leading zero if necessary
+        month_str = str(month).zfill(2)
+
+        # Define the start and end dates for the specified month
+        start_date = f'2024-{month_str}-01'
+        end_date = f'2024-{month_str}-31'
+
+        # Query the collection for expenses within the specified month
+        expenses = self.collection.find({
+            'date': {
+                '$gte': start_date,
+                '$lte': end_date
+            }
+        })
+        
+        return expenses
+
+
+    # def search_date(self, start_date, end_date):
+    #     # Convert the month to a string with leading zero if necessary
+    #     start_date_str = str(start_date).zfill(2)
+    #     end_date_str = str(end_date).zfill(2)
+
+    #     # Query the collection for expenses within the specified duration
+    #     expenses = self.collection.find({
+    #         'date': {
+    #             '$gte': start_date_str,
+    #             '$lte': end_date_str}
+    #     })
+        
+    #     return expenses
+    def search_date(self, start_date, end_date):
+        # Convert the month to a string with leading zero if necessary
+        start_date_str = start_date.strftime('%Y-%m-%d')
+        end_date_str = end_date.strftime('%Y-%m-%d')
+
+        # Query the collection for documents within the specified period
+        expenses = list(self.collection.find({
+            'date': {
+                '$gte': start_date_str,
+                '$lte': end_date_str
+            }
+        }))
+
+        return expenses
