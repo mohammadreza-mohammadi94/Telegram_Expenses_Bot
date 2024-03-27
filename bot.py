@@ -10,7 +10,7 @@ from mongo_client import ExpenseMongoClient
 # Bot Token
 BOT_TOKEN : Final = "7079993461:AAGryn5WVrZlREgS8HwRYMpltQEQr7jKXPI"
 
-# Developer Ids whom can access to the bot
+# User Ids whom can access to the bot
 dev_ids = [44557320]
 
 # Enable Logging
@@ -27,21 +27,29 @@ db_client = ExpenseMongoClient("mongodb+srv://jigsaw1313:Aramis2427@expenses.0cb
 # Handlers
 async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """ This method is reposible for running and greeting commands."""
-    user_id = update.effective_user.id
     
-    # Check if the user is authorized
-    if user_id not in dev_ids:
+    try:
+        user_id = update.effective_user.id
+        
+        # Check if the user is authorized
+        if user_id not in dev_ids:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="You are not authorized to use this bot.",
+                reply_to_message_id=update.effective_message.id,
+            )
+
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="You are not authorized to use this bot.",
+            text="Hello Mohammadreza, Let's record your daily expenses",
             reply_to_message_id=update.effective_message.id,
         )
-
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Hello Mohammadreza, Let's record your daily expenses",
-        reply_to_message_id=update.effective_message.id,
-    )
+    except Exception as e:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"An error occurred: {str(e)}",
+            reply_to_message_id=update.effective_message.id,
+        )
 
 
 # help message content.
@@ -63,11 +71,19 @@ async def help_command_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     """ This function is reposible to show command handlers to user in telegram bot."""
     
     
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text = HELP_COMMAND_RESPONSE,
-        reply_to_message_id=update.effective_message.id
-    )
+    try:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text = HELP_COMMAND_RESPONSE,
+            reply_to_message_id=update.effective_message.id
+        )
+    except Exception as e:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"An error occurred: {str(e)}",
+            reply_to_message_id=update.effective_message.id,
+        )
+
 
 
 async def add_expense_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -76,50 +92,64 @@ async def add_expense_command_handler(update: Update, context: ContextTypes.DEFA
     updated inside mongodb functions."""
     
     
-    user_id = update.effective_user.id
-    amount = context.args[0]
-    category = context.args[1]
-    description = " ".join(context.args[2:])
+    try:
+        user_id = update.effective_user.id
+        amount = context.args[0]
+        category = context.args[1]
+        description = " ".join(context.args[2:])
 
-    if user_id in dev_ids:
-        # Call the add_expense method on the instance
-        db_client.add_expense(user_id=user_id, amount=int(amount), category=category, description=description)
-        
+        if user_id in dev_ids:
+            # Call the add_expense method on the instance
+            db_client.add_expense(user_id=user_id, amount=int(amount), category=category, description=description)
+            
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                reply_to_message_id=update.effective_message.id,
+                text="Expense added successfully!"
+            )
+
+        else:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text="You are not authorized to use this command.",
+                reply_to_message_id=update.effective_message.id,
+            )
+    except Exception as e:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
+            text=f"An error occurred: {str(e)}",
             reply_to_message_id=update.effective_message.id,
-            text="Expense added successfully!"
         )
 
-    else:
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text="You are not authorized to use this command.",
-            reply_to_message_id=update.effective_message.id,
-        )
 
 
 async def delete_expense_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """ This method is called when the user wants to delete,
     a specific expense. usage command is : /delete <document_id>"""
     
-    
-    doc_id = context.args[0]
-    user_id = update.effective_user.id
-    
-    delete_result = db_client.delete_expense(user_id=user_id,
-                            doc_id=ObjectId(doc_id))
-    if delete_result:
+    try:
+        doc_id = context.args[0]
+        user_id = update.effective_user.id
+        
+        delete_result = db_client.delete_expense(user_id=user_id,
+                                doc_id=ObjectId(doc_id))
+        if delete_result:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                reply_to_message_id=update.effective_message.id,
+                text="Deleted successfully!"
+            )
+        else:
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                reply_to_message_id=update.effective_message.id,
+                text="Problem Occured, Please check bot's log."
+            )
+    except Exception as e:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
+            text=f"An error occurred: {str(e)}",
             reply_to_message_id=update.effective_message.id,
-            text="Deleted successfully!"
-        )
-    else:
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            reply_to_message_id=update.effective_message.id,
-            text="Problem Occured, Please check bot's log."
         )
 
 
@@ -127,13 +157,20 @@ async def get_total_expense_command_handler(update: Update, context: ContextType
     """ This method is reponsible to show total expense recorded inside database"""
     
     
-    user_id = update.effective_user.id
-    result = db_client.get_total_expense(user_id)
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        reply_to_message_id=update.effective_message.id,
-        text=f"Your total expense is: {result}"
-    )
+    try:    
+        user_id = update.effective_user.id
+        result = db_client.get_total_expense(user_id)
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            reply_to_message_id=update.effective_message.id,
+            text=f"Your total expense is: {result}"
+        )
+    except Exception as e:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"An error occurred: {str(e)}",
+            reply_to_message_id=update.effective_message.id,
+        )
 
 
 async def get_expenses_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -146,35 +183,42 @@ async def get_expenses_command_handler(update: Update, context: ContextTypes.DEF
     it will show all documents, regardless of its category."""
     
     
-    args = context.args            # To get catregory name 
-    user_id = update.effective_user.id
+    try:
+        args = context.args            # To get catregory name 
+        user_id = update.effective_user.id
 
-    if args:
-        # if user's sends category name.
-        category = args[0]
-        expenses = db_client.get_expenses_by_category(user_id, category)
-        text ="Your expenses are:\n"
-        for expense in expenses:
-            text += (
-                f"{expense['amount']} - {expense['category']} - {expense['description']} - {expense['date']} - {expense['document_id']}\n"
-    )
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            reply_to_message_id=update.effective_message.id,
-            text=text
+        if args:
+            # if user's sends category name.
+            category = args[0]
+            expenses = db_client.get_expenses_by_category(user_id, category)
+            text ="Your expenses are:\n"
+            for expense in expenses:
+                text += (
+                    f"{expense['amount']} - {expense['category']} - {expense['description']} - {expense['date']} - {expense['document_id']}\n"
         )
-
-    else:
-        # if user does not send category name.
-        total_expenses = db_client.get_expenses(user_id)
-        text = "Your expenses are:\n"
-        for expense in total_expenses:
-            text += (
-                f"{expense['amount']} - {expense['category']} - {expense['description']} - {expense['date']} - {expense['document_id']}\n"
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                reply_to_message_id=update.effective_message.id,
+                text=text
             )
+
+        else:
+            # if user does not send category name.
+            total_expenses = db_client.get_expenses(user_id)
+            text = "Your expenses are:\n"
+            for expense in total_expenses:
+                text += (
+                    f"{expense['amount']} - {expense['category']} - {expense['description']} - {expense['date']} - {expense['document_id']}\n"
+                )
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=text,
+                reply_to_message_id=update.effective_message.id,
+            )
+    except Exception as e:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text=text,
+            text=f"An error occurred: {str(e)}",
             reply_to_message_id=update.effective_message.id,
         )
 
@@ -183,54 +227,99 @@ async def get_categories_command_handler(update: Update, context: ContextTypes.D
     """This method's responsibility is to show categories name."""
     
     
-    user_id = update.effective_user.id 
-    categories = db_client.get_categories(user_id)
-    text = f"Your categories are: {', '.join(categories)}"
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        reply_to_message_id=update.effective_message.id,
-        text=text
-    )
+    try:
+        user_id = update.effective_user.id 
+        categories = db_client.get_categories(user_id)
+        text = f"Your categories are: {', '.join(categories)}"
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            reply_to_message_id=update.effective_message.id,
+            text=text
+        )
+    except Exception as e:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"An error occurred: {str(e)}",
+            reply_to_message_id=update.effective_message.id,
+        )
+
 
 
 async def get_total_expense_by_category_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """ This method will show all expenses by their category."""
     
-    user_id = update.effective_user.id
-    total_expense = db_client.get_total_expense_by_category(user_id)
-    text = "Your total expenses by category are:\n"
-    for category, expense in total_expense.items():
-        text += f"{category}: {expense}\n"
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        reply_to_message_id=update.effective_message.id,
-        text=text)
+    
+    try:
+        user_id = update.effective_user.id
+        total_expense = db_client.get_total_expense_by_category(user_id)
+        text = "Your total expenses by category are:\n"
+        for category, expense in total_expense.items():
+            text += f"{category}: {expense}\n"
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            reply_to_message_id=update.effective_message.id,
+            text=text
+        )
+    except Exception as e:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"An error occurred: {str(e)}",
+            reply_to_message_id=update.effective_message.id,
+        )
+
 
 
 async def search_expense_by_month_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """ This method will show all expenses by specified month."""
     
-    
-    month = context.args[0]
-    expenses_by_month = db_client.get_expenses_by_month(month)
-    text =f"Your expenses in month number {month} are:\n"
-    
-    for expense in expenses_by_month:
-        text += (
-            f"{expense['amount']} - {expense['category']} - {expense['description']} - {expense['date']} - {expense['_id']}\n"
+    try:
+        month = context.args[0]
+        expenses_by_month = db_client.get_expenses_by_month(month)
+        text =f"Your expenses in month number {month} are:\n"
+        
+        for expense in expenses_by_month:
+            text += (
+                f"{expense['amount']} - {expense['category']} - {expense['description']} - {expense['date']} - {expense['_id']}\n"
+            )
+        await context.bot.send_message(
+            chat_id=update.effective_user.id,
+            reply_to_message_id=update.effective_message.id,
+            text=text
         )
-    await context.bot.send_message(
-        chat_id=update.effective_user.id,
-        reply_to_message_id=update.effective_message.id,
-        text=text
-    )
+    except Exception as e:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"An error occurred: {str(e)}",
+            reply_to_message_id=update.effective_message.id,
+        )
 
 
 async def search_period_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """This function is used to search and retrive all expenses during a given period of date."""
-    
-    
-    pass
+
+
+    try:
+        date1 = context.args[0]
+        date2 = context.args[1]
+
+        expenses_date_duration = db_client.search_date(date1, date2)
+
+        text =f"Your expenses during {date1} - {date2} are:\n"
+        for expense in expenses_date_duration:
+            text += (
+                f"{expense['amount']} - {expense['category']} - {expense['description']} - {expense['date']} - {expense['_id']}\n"
+            )
+        await context.bot.send_message(
+            chat_id=update.effective_user.id,
+            reply_to_message_id=update.effective_message.id,
+            text=text
+        )
+    except Exception as e:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"An error occurred: {str(e)}",
+            reply_to_message_id=update.effective_message.id,
+        )
 
 
 # Error Handler
@@ -255,7 +344,7 @@ if __name__ == "__main__":
     bot.add_handler(CommandHandler('search_date', search_period_command_handler))
     
     # Error handlers
-    # bot.add_error_handler(error_handler)
+    bot.add_error_handler(error_handler)
     
     # start bot
     bot.run_polling()

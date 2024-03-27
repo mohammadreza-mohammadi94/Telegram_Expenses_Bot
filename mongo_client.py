@@ -13,6 +13,7 @@ class ExpenseMongoClient:
         self.db = self.client.get_database(db_name)
         self.collection = self.db.get_collection(collection_name)
 
+
     def add_expense(self, user_id: int, amount: int, category: str, description: str):
         results = self.collection.insert_one({
             "user_id": user_id,
@@ -23,14 +24,15 @@ class ExpenseMongoClient:
             })
         return results
 
+
     def delete_expense(self, user_id:int, doc_id:str):
         result = self.collection.delete_one({
             'user_id' : user_id,
             '_id': doc_id,
         })
         return result.deleted_count
-    
-    
+
+
     def get_expenses(self, user_id: int) -> list:
         results = self.collection.find({'user_id': user_id})
         expenses = []
@@ -62,6 +64,7 @@ class ExpenseMongoClient:
                 "date": result["date"],
                 })
         return cate
+
 
     def get_total_expense(self, user_id: int):
         total_expense = self.collection.aggregate([
@@ -108,30 +111,16 @@ class ExpenseMongoClient:
         return expenses
 
 
-    # def search_date(self, start_date, end_date):
-    #     # Convert the month to a string with leading zero if necessary
-    #     start_date_str = str(start_date).zfill(2)
-    #     end_date_str = str(end_date).zfill(2)
-
-    #     # Query the collection for expenses within the specified duration
-    #     expenses = self.collection.find({
-    #         'date': {
-    #             '$gte': start_date_str,
-    #             '$lte': end_date_str}
-    #     })
-        
-    #     return expenses
     def search_date(self, start_date, end_date):
         # Convert the month to a string with leading zero if necessary
-        start_date_str = start_date.strftime('%Y-%m-%d')
-        end_date_str = end_date.strftime('%Y-%m-%d')
+        start_date_str = str(start_date).zfill(2)
+        end_date_str = str(end_date).zfill(2)
 
-        # Query the collection for documents within the specified period
-        expenses = list(self.collection.find({
+        # Query the collection for expenses within the specified duration
+        expenses = self.collection.find({
             'date': {
                 '$gte': start_date_str,
-                '$lte': end_date_str
-            }
-        }))
-
+                '$lte': end_date_str}
+        })
+        
         return expenses
