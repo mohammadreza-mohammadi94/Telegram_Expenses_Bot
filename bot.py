@@ -29,16 +29,6 @@ async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TY
     """ This method is reposible for running and greeting commands."""
     
     try:
-        user_id = update.effective_user.id
-        
-        # Check if the user is authorized
-        if user_id not in dev_ids:
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text="You are not authorized to use this bot.",
-                reply_to_message_id=update.effective_message.id,
-            )
-
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="Hello Mohammadreza, Let's record your daily expenses",
@@ -98,22 +88,15 @@ async def add_expense_command_handler(update: Update, context: ContextTypes.DEFA
         category = context.args[1]
         description = " ".join(context.args[2:])
 
-        if user_id in dev_ids:
-            # Call the add_expense method on the instance
-            db_client.add_expense(user_id=user_id, amount=int(amount), category=category, description=description)
-            
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                reply_to_message_id=update.effective_message.id,
-                text="Expense added successfully!"
-            )
+        # Call the add_expense method on the instance
+        db_client.add_expense(user_id=user_id, amount=int(amount), category=category, description=description)
+        
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            reply_to_message_id=update.effective_message.id,
+            text="Expense added successfully!"
+        )
 
-        else:
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text="You are not authorized to use this command.",
-                reply_to_message_id=update.effective_message.id,
-            )
     except Exception as e:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -145,6 +128,7 @@ async def delete_expense_command_handler(update: Update, context: ContextTypes.D
                 reply_to_message_id=update.effective_message.id,
                 text="Problem Occured, Please check bot's log."
             )
+
     except Exception as e:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -246,7 +230,9 @@ async def get_categories_command_handler(update: Update, context: ContextTypes.D
 
 
 async def get_total_expense_by_category_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """ This method will show all expenses by their category."""
+    """ 
+    This method will show all expenses by their category.
+    """
     
     
     try:
@@ -270,7 +256,9 @@ async def get_total_expense_by_category_command_handler(update: Update, context:
 
 
 async def search_expense_by_month_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """ This method will show all expenses by specified month."""
+    """ 
+    This method will show all expenses by specified month.
+    """
     
     try:
         month = context.args[0]
@@ -295,7 +283,9 @@ async def search_expense_by_month_command_handler(update: Update, context: Conte
 
 
 async def search_period_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """This function is used to search and retrive all expenses during a given period of date."""
+    """
+    This function is used to search and retrive all expenses during a given period of date.
+    """
 
 
     try:
