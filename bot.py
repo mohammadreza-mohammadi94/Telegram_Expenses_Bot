@@ -1,17 +1,15 @@
 import logging
-from datetime import datetime
 from typing import Final
 from telegram import Update
-from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler
+from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 from bson.objectid import ObjectId
 from mongo_client import ExpenseMongoClient
+from functools import wraps
+
 
 
 # Bot Token
 BOT_TOKEN : Final = "7079993461:AAGryn5WVrZlREgS8HwRYMpltQEQr7jKXPI"
-
-# User Ids whom can access to the bot
-dev_ids = [44557320]
 
 # Enable Logging
 logging.basicConfig(
@@ -20,18 +18,38 @@ logging.basicConfig(
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
-
 # connect to your mongodb
 db_client = ExpenseMongoClient("mongodb+srv://jigsaw1313:Aramis2427@expenses.0cbt6ew.mongodb.net/", 27017)
 
+# User Ids whom can access to the bot
+LIST_OF_ADMINS = [44557320]
+
+# Decorator to handle access to bot.
+def restricted(func):
+    ''' This is a decorator that will limit access to the bot
+        to only users in LIST_OF_ADMINS variable.
+    '''
+
+    @wraps(func)
+    async def wrapped(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
+        user_id = update.effective_user.id
+        if user_id not in LIST_OF_ADMINS:
+            print(f"Unauthorized access denied for {user_id}.")
+            await context.bot.send_message(chat_id=update.effective_chat.id, text="Access denied")
+            return
+        return await func(update, context, *args, **kwargs)
+    return wrapped
+
 # Handlers
+@restricted
 async def start_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """ This method is reposible for running and greeting commands."""
+    user_name = update.effective_user.name
     
     try:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="Hello Mohammadreza, Let's record your daily expenses",
+            text=f"Hello {user_name}, Let's record your daily expenses",
             reply_to_message_id=update.effective_message.id,
         )
     except Exception as e:
@@ -57,6 +75,7 @@ Greetings! Here are the commands you can use with this bot:
 /search_date <start_date> <end_date> -> Show all expenses durint specified date.
 """
 
+@restricted
 async def help_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """ This function is reposible to show command handlers to user in telegram bot."""
     
@@ -75,7 +94,7 @@ async def help_command_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         )
 
 
-
+@restricted
 async def add_expense_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """ This function is reposible to add new expense to mongodb.
     the usage command inside telegram is -> /add <amount> <category> <description>. The date will be
@@ -105,7 +124,7 @@ async def add_expense_command_handler(update: Update, context: ContextTypes.DEFA
         )
 
 
-
+@restricted
 async def delete_expense_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """ This method is called when the user wants to delete,
     a specific expense. usage command is : /delete <document_id>"""
@@ -137,6 +156,7 @@ async def delete_expense_command_handler(update: Update, context: ContextTypes.D
         )
 
 
+@restricted
 async def get_total_expense_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """ This method is reponsible to show total expense recorded inside database"""
     
@@ -157,6 +177,7 @@ async def get_total_expense_command_handler(update: Update, context: ContextType
         )
 
 
+@restricted
 async def get_expenses_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """ This method is responsible show all expenses and documents recorded in database.
     If user sends a category's name after command , it will be displayed according to that category.
@@ -207,6 +228,7 @@ async def get_expenses_command_handler(update: Update, context: ContextTypes.DEF
         )
 
 
+@restricted
 async def get_categories_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """This method's responsibility is to show categories name."""
     
@@ -228,7 +250,7 @@ async def get_categories_command_handler(update: Update, context: ContextTypes.D
         )
 
 
-
+@restricted
 async def get_total_expense_by_category_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """ 
     This method will show all expenses by their category.
@@ -254,7 +276,7 @@ async def get_total_expense_by_category_command_handler(update: Update, context:
         )
 
 
-
+@restricted
 async def search_expense_by_month_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """ 
     This method will show all expenses by specified month.
@@ -282,6 +304,7 @@ async def search_expense_by_month_command_handler(update: Update, context: Conte
         )
 
 
+@restricted
 async def search_period_command_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     This function is used to search and retrive all expenses during a given period of date.
@@ -312,9 +335,20 @@ async def search_period_command_handler(update: Update, context: ContextTypes.DE
         )
 
 
+@restricted
+async def unknown_input_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """ In case of unknown input message from user this method will return HELP_COMMAND_RESPONSE."""
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        reply_to_message_id=update.effective_message.id,
+        text="Sorry, I didn't understand that command.\n" + HELP_COMMAND_RESPONSE
+    )
+
 # Error Handler
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("error:",context.error,"on Update",update)
+
 
 
 # Creating and running the bot.
@@ -322,6 +356,7 @@ if __name__ == "__main__":
     bot = ApplicationBuilder().token(BOT_TOKEN).build()
 
     # Adding handlers
+    # Command handlers
     bot.add_handler(CommandHandler("start", start_command_handler))
     bot.add_handler(CommandHandler('add', add_expense_command_handler))
     bot.add_handler(CommandHandler('help', help_command_handler))
@@ -332,7 +367,9 @@ if __name__ == "__main__":
     bot.add_handler(CommandHandler('total_by_category', get_total_expense_by_category_command_handler))
     bot.add_handler(CommandHandler('search_month', search_expense_by_month_command_handler))
     bot.add_handler(CommandHandler('search_date', search_period_command_handler))
-    
+    # Message handler
+    bot.add_handler(MessageHandler(filters.COMMAND, unknown_input_message_handler))
+    bot.add_handler(MessageHandler(filters.TEXT, unknown_input_message_handler))
     # Error handlers
     bot.add_error_handler(error_handler)
     
