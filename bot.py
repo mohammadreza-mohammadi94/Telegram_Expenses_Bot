@@ -9,7 +9,7 @@ from functools import wraps
 
 
 # Bot Token
-BOT_TOKEN : Final = "7079993461:AAGryn5WVrZlREgS8HwRYMpltQEQr7jKXPI"
+BOT_TOKEN : Final = ""
 
 # Enable Logging
 logging.basicConfig(
@@ -19,10 +19,10 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # connect to your mongodb
-db_client = ExpenseMongoClient("mongodb+srv://jigsaw1313:Aramis2427@expenses.0cbt6ew.mongodb.net/", 27017)
+db_client = ExpenseMongoClient("", 27017)
 
 # User Ids whom can access to the bot
-LIST_OF_ADMINS = [44557320]
+LIST_OF_ADMINS = []
 
 # Decorator to handle access to bot.
 def restricted(func):
